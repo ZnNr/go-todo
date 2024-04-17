@@ -1,16 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 )
 
 func main() {
+	webDir := "web"
 	port := getPort()
-	webDir := "./web"
-
 	http.Handle("/", http.FileServer(http.Dir(webDir)))
-
+	fmt.Printf("Server is listening on port %s...\n", port)
 	http.ListenAndServe(":"+port, nil)
 }
 
