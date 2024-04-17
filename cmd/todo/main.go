@@ -3,33 +3,46 @@ package main
 import (
 	"fmt"
 	"github.com/ZnNr/go-todo/internal/database"
+	"github.com/ZnNr/go-todo/internal/nextdate"
 	"log"
 
 	"net/http"
 	"os"
 )
 
+const (
+	webDir      = "web"
+	defaultPort = "7540"
+)
+
 func main() {
-	database.InitializeDatabase()
+	database.InitializeDatabase("scheduler.db")
 
-	webDir := "web"
-	port := getPort()
-	addr := ":" + port
+	addr := ":" + getPort()
 
-	http.Handle("/", http.FileServer(http.Dir(webDir)))
-
-	server := &http.Server{Addr: addr}
-
-	fmt.Printf("Server is listening on port %s...\n", port)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	if err := initServer(addr); err != nil {
+		log.Fatalf("Failed to initialize server: %v", err)
 	}
+}
+
+func initServer(addr string) error {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(webDir)))
+	mux.HandleFunc("/api/nextdate", nextdate.NextDate) // Используем HandleFunc вместо Handle
+
+	server := &http.Server{Addr: addr, Handler: mux}
+
+	log.Printf("Server is listening on port %s...\n", addr)
+	if err := server.ListenAndServe(); err != nil {
+		return fmt.Errorf("failed to start server: %v", err)
+	}
+	return nil
 }
 
 func getPort() string {
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
-		port = "7540"
+		port = defaultPort
 	}
 	return port
 }
