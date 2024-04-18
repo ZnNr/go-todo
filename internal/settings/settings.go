@@ -6,6 +6,10 @@ import "os"
 // DateFormat представляет формат даты по умолчанию.
 var DateFormat = "20060102"
 
+var SearchDateFormat = "02.01.2006"
+
+var TasksListRowsLimit = 50
+
 // defaultEnv содержит значения по умолчанию для некоторых настроек.
 var defaultEnv = map[string]string{
 	"TODO_PORT":   "7540",

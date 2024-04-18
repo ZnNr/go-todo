@@ -54,6 +54,53 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetTask обрабатывает запрос на получение задачи по ID
+func GetTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// Получаем значение параметра "id" из URL запроса
+	id := r.URL.Query().Get("id")
+	// Получаем задачу по ID с помощью сервиса TaskServiceInstance
+	task, err := TaskServiceInstance.GetTask(id)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	// Преобразуем полученную задачу в формат JSON и отправляем клиенту
+	response, err := json.Marshal(task)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	w.Write(response)
+}
+
+// GetTasks обрабатывает запрос на получение списка задач
+func GetTasks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// Получаем значение параметра "search" из URL запроса
+	search := r.URL.Query().Get("search")
+	var tasks *TaskList
+	var err error
+	// Если параметр "search" не указан, получаем все задачи, иначе ищем задачи по запросу
+	if len(search) == 0 {
+		tasks, err = TaskServiceInstance.GetTasks()
+	} else {
+		tasks, err = TaskServiceInstance.SearchTasks(search)
+	}
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	// Преобразуем список задач в формат JSON и отправляем клиенту
+	response, err := json.Marshal(tasks)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+
+	w.Write(response)
+}
+
 // writeErrorAndRespond пишет ошибку в ответ и устанавливает соответствующий код состояния
 func writeErrorAndRespond(w http.ResponseWriter, statusCode int, err error) {
 	w.WriteHeader(statusCode)

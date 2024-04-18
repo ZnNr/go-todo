@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/ZnNr/go-todo/internal/nextdate"
 	"github.com/ZnNr/go-todo/internal/settings"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +30,14 @@ type TaskList struct {
 // TaskService представляет сервис для работы с задачами
 type TaskService struct {
 	taskData *TaskData
+}
+
+func sliceToTasks(list []Task) *TaskList {
+	if list == nil {
+		return &TaskList{Tasks: []Task{}}
+
+	}
+	return &TaskList{Tasks: list}
 }
 
 // Функция convertTask конвертирует и проверяет задачу перед сохранением
@@ -74,4 +83,37 @@ func (service TaskService) CreateTask(task Task) (int, error) {
 	}
 	id, err := service.taskData.InsertTask(task)
 	return int(id), err
+}
+
+func (service TaskService) GetTasks() (*TaskList, error) {
+	list, err := service.taskData.GetTasks(settings.TasksListRowsLimit)
+	if err != nil {
+		return nil, err
+	}
+	return sliceToTasks(list), err
+}
+
+func (service TaskService) SearchTasks(search string) (*TaskList, error) {
+	date, err := time.Parse(settings.SearchDateFormat, search)
+	if err == nil {
+		list, err := service.taskData.GetTasksByDate(date.Format(settings.DateFormat), settings.TasksListRowsLimit)
+		if err != nil {
+			return nil, err
+		}
+		return sliceToTasks(list), nil
+	}
+	list, err := service.taskData.GetTasksBySearchString(search, settings.TasksListRowsLimit)
+	return sliceToTasks(list), err
+}
+
+func (service TaskService) GetTask(id string) (*Task, error) {
+	convId, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	task, err := service.taskData.GetTask(convId)
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
 }

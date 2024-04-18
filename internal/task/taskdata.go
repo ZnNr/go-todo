@@ -23,6 +23,13 @@ CREATE INDEX IF NOT EXISTS indexdate ON scheduler (date);
 	insertQuery = `
 INSERT INTO scheduler(date, title, comment, repeat) VALUES (?, ?, ?, ?)
 `
+	getTaskQuery = "SELECT * FROM scheduler WHERE id = ?"
+
+	getTasksQuery = "SELECT * FROM scheduler ORDER BY date LIMIT ?"
+
+	getTasksByDateQuery = "SELECT * FROM scheduler WHERE date = ? ORDER BY date LIMIT ?"
+
+	getTasksBySearchStringQuery = "SELECT * FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?"
 )
 
 // TaskData представляет структуру для работы с данными задач
@@ -63,6 +70,65 @@ func (data *TaskData) InsertTask(task Task) (int64, error) {
 	}
 
 	return lastID, nil
+}
+
+// getTasksByRows извлекает задачи из результата sql.Rows
+func getTasksByRows(rows *sql.Rows) ([]Task, error) {
+	var tasks []Task
+
+	for rows.Next() {
+		var task Task
+		if err := rows.Scan(&task.Id, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// GetTask получает задачу по ID
+func (data TaskData) GetTask(id int) (Task, error) {
+
+	row := data.db.QueryRow(getTaskQuery, id)
+
+	var task Task
+	err := row.Scan(&task.Id, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	return task, err
+}
+
+// GetTasks получает все задачи с ограничением по количеству
+func (data TaskData) GetTasks(limit int) ([]Task, error) {
+
+	rows, err := data.db.Query(getTasksQuery, limit)
+	if err != nil {
+		return nil, err
+	}
+	return getTasksByRows(rows)
+}
+
+// GetTasksByDate получает задачи по дате с ограничением по количеству
+func (data TaskData) GetTasksByDate(date string, limit int) ([]Task, error) {
+
+	rows, err := data.db.Query(getTasksByDateQuery, date, limit)
+	if err != nil {
+		return nil, err
+	}
+	return getTasksByRows(rows)
+}
+
+// GetTasksBySearchString получает задачи по поисковой строке с ограничением по количеству
+func (data TaskData) GetTasksBySearchString(search string, limit int) ([]Task, error) {
+
+	rows, err := data.db.Query(getTasksBySearchStringQuery, "%"+search+"%", "%"+search+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	return getTasksByRows(rows)
 }
 
 // openDb открывает соединение с базой данных
