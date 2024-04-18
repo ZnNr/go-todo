@@ -30,6 +30,8 @@ INSERT INTO scheduler(date, title, comment, repeat) VALUES (?, ?, ?, ?)
 	getTasksByDateQuery = "SELECT * FROM scheduler WHERE date = ? ORDER BY date LIMIT ?"
 
 	getTasksBySearchStringQuery = "SELECT * FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?"
+	// Подготовленный запрос для обновления записи в базе данных.
+	updateQuery = "UPDATE scheduler SET date=?, title=?, comment=?, repeat=? WHERE id=?"
 )
 
 // TaskData представляет структуру для работы с данными задач
@@ -129,6 +131,37 @@ func (data TaskData) GetTasksBySearchString(search string, limit int) ([]Task, e
 		return nil, err
 	}
 	return getTasksByRows(rows)
+}
+
+// UpdateTask обновляет задачу в базе данных.
+func (data TaskData) UpdateTask(task Task) (bool, error) {
+
+	// Начало транзакции.
+	tx, err := data.db.Begin()
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback() // Откат транзакции в случае ошибки.
+
+	// Выполнение подготовленного запроса внутри транзакции.
+	result, err := tx.Exec(updateQuery, task.Date, task.Title, task.Comment, task.Repeat, task.Id)
+	if err != nil {
+		return false, err
+	}
+
+	// Получение количества обновленных строк.
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	// Коммит транзакции, если все операции без ошибок.
+	if err = tx.Commit(); err != nil {
+		return false, err
+	}
+
+	// Проверка, что была обновлена одна строка.
+	return rowsAffected == 1, nil
 }
 
 // openDb открывает соединение с базой данных

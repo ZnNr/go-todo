@@ -85,6 +85,22 @@ func (service TaskService) CreateTask(task Task) (int, error) {
 	return int(id), err
 }
 
+func (service TaskService) Update(task Task) error {
+	err := convertTask(&task)
+	if err != nil {
+		return err
+	}
+
+	updated, err := service.taskData.UpdateTask(task)
+	if err != nil {
+		return err
+	}
+	if !updated {
+		return ErrNotFoundTask
+	}
+	return nil
+}
+
 func (service TaskService) GetTasks() (*TaskList, error) {
 	list, err := service.taskData.GetTasks(settings.TasksListRowsLimit)
 	if err != nil {

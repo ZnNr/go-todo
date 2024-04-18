@@ -26,7 +26,9 @@ func main() {
 	r.Route("/api/task", func(r chi.Router) {
 		r.Post("/", task.PostTask)   // API для создания задачи
 		r.Get("/{id}", task.GetTask) // API для получения задачи по ID
+		r.Put("/", task.PutTask)
 	})
+
 	r.Get("/api/tasks", task.GetTasks) // API для получения списка задач
 	// Старт веб-сервера на указанном порту.
 	port := settings.Setting("TODO_PORT")

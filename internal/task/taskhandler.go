@@ -101,6 +101,23 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+func PutTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	task, err := taskFromRequestBody(r)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = TaskServiceInstance.Update(task)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	w.Write([]byte("{}"))
+}
+
 // writeErrorAndRespond пишет ошибку в ответ и устанавливает соответствующий код состояния
 func writeErrorAndRespond(w http.ResponseWriter, statusCode int, err error) {
 	w.WriteHeader(statusCode)
