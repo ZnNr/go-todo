@@ -3,6 +3,7 @@ package task
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ZnNr/go-todo/internal/errorutil"
 	"net/http"
 )
 
@@ -145,14 +146,5 @@ func PutTask(w http.ResponseWriter, r *http.Request) {
 // writeErrorAndRespond пишет ошибку в ответ и устанавливает соответствующий код состояния
 func writeErrorAndRespond(w http.ResponseWriter, statusCode int, err error) {
 	w.WriteHeader(statusCode)
-	w.Write(MarshalError(err))
-}
-
-// MarshalError преобразует ошибку в формат JSON
-func MarshalError(err error) []byte {
-	type errJson struct {
-		Error string `json:"error"`
-	}
-	res, _ := json.Marshal(errJson{Error: err.Error()})
-	return res
+	w.Write(errorutil.MarshalError(err))
 }
