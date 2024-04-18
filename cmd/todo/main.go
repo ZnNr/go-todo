@@ -1,48 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"github.com/ZnNr/go-todo/internal/database"
 	"github.com/ZnNr/go-todo/internal/nextdate"
+	"github.com/ZnNr/go-todo/internal/settings"
+	"github.com/ZnNr/go-todo/internal/task"
 	"log"
 
+	"github.com/go-chi/chi/v5"
 	"net/http"
-	"os"
-)
-
-const (
-	webDir      = "web"
-	defaultPort = "7540"
 )
 
 func main() {
-	database.InitializeDatabase("scheduler.db")
-
-	addr := ":" + getPort()
-
-	if err := initServer(addr); err != nil {
-		log.Fatalf("Failed to initialize server: %v", err)
+	// Инициализация базы данных и задач.
+	taskData, err := task.NewTaskData(settings.Setting("TODO_DBFILE"))
+	defer taskData.CloseDb()
+	if err != nil {
+		panic(err)
 	}
-}
-
-func initServer(addr string) error {
-	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir(webDir)))
-	mux.HandleFunc("/api/nextdate", nextdate.NextDate) // Используем HandleFunc вместо Handle
-
-	server := &http.Server{Addr: addr, Handler: mux}
-
-	log.Printf("Server is listening on port %s...\n", addr)
-	if err := server.ListenAndServe(); err != nil {
-		return fmt.Errorf("failed to start server: %v", err)
+	// Инициализация маршрутизатора.
+	r := chi.NewRouter()
+	// Маршруты для обработки файлов и API.
+	r.Get("/*", FileServer)
+	r.Get("/api/nextdate", nextdate.GetNextDate)
+	task.TaskServiceInstance = task.InitTaskService(taskData)
+	r.Post("/api/task", task.PostTask)
+	// Старт веб-сервера на указанном порту.
+	port := settings.Setting("TODO_PORT")
+	log.Printf("Server started on port :%s", port)
+	err = http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatalf("Error starting the web server: %v", err)
 	}
-	return nil
-}
-
-func getPort() string {
-	port := os.Getenv("TODO_PORT")
-	if port == "" {
-		port = defaultPort
-	}
-	return port
 }

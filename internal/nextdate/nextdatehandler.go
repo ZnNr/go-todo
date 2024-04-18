@@ -1,73 +1,54 @@
 package nextdate
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"encoding/json"
+	"github.com/ZnNr/go-todo/internal/settings"
 	"net/http"
 	"time"
 )
 
-// ParseRequestParams парсирует параметры запроса и возвращает временные метки и повторение.
-func ParseRequestParams(r *http.Request) (time.Time, time.Time, string, error) {
-	nowStr := r.URL.Query().Get("now")    // Получение параметра "now" из URL запроса
-	dateStr := r.URL.Query().Get("date")  // Получение параметра "date" из URL запроса
-	repeat := r.URL.Query().Get("repeat") // Получение параметра "repeat" из URL запроса
-
-	// Парсинг строки "now" в формат времени
-	nowTime, err := parseDate(nowStr, "parsing string now to date")
-	if err != nil {
-		return time.Time{}, time.Time{}, "", fmt.Errorf("Failed to parse 'now' date: %v", err)
-	}
-	// Парсинг строки "date" в формат времени
-	dateTime, err := parseDate(dateStr, "parsing string date to date")
-	if err != nil {
-		return time.Time{}, time.Time{}, "", fmt.Errorf("Failed to parse 'date' date: %v", err)
-	}
-	// Проверка наличия параметра "repeat" в запросе
-	if repeat == "" {
-		return time.Time{}, time.Time{}, "", errors.New("empty repeat")
-	}
-
-	return nowTime, dateTime, repeat, nil
+// ErrorResponse представляет структуру ошибки для кодирования в JSON.
+type ErrorResponse struct {
+	Message string `json:"message"`
 }
 
-// NextDate обрабатывает запрос, вычисляет следующую дату и записывает результат в ответ.
-func NextDate(w http.ResponseWriter, r *http.Request) {
-	nowTime, dateTime, repeat, err := ParseRequestParams(r)
-	if err != nil {
-		handleError(w, err, "Request parameter error")
-		return
+// writeJSONError отправляет ответ с ошибкой в формате JSON.
+func writeJSONError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	errResponse := ErrorResponse{
+		Message: message,
 	}
-	// Вычисление следующей даты на основе полученных параметров
-	nextDate, err := CalculateNextDate(dateTime, nowTime, repeat)
+	json.NewEncoder(w).Encode(errResponse)
+}
+
+// GetNextDate обрабатывает HTTP запрос и возвращает следующую дату на основе входных параметров.
+func GetNextDate(w http.ResponseWriter, r *http.Request) {
+	now, err := time.Parse(settings.DateFormat, r.URL.Query().Get("now"))
 	if err != nil {
-		handleError(w, err, "Failed to calculate next date")
+		writeJSONError(w, "Invalid 'now' parameter", http.StatusBadRequest)
 		return
 	}
 
-	logAndWriteResult(w, nowTime.Format("20060102"), dateTime.Format("20060102"), repeat, nextDate)
-}
-
-// parseDate парсит строку даты в формат времени с заданной целью.
-func parseDate(dateStr, errorMsg string) (time.Time, error) {
-	dateTime, err := time.Parse("20060102", dateStr)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("Failed: %s - %v", errorMsg, err)
+	date := r.URL.Query().Get("date")
+	if len(date) == 0 {
+		writeJSONError(w, "Invalid 'date' parameter", http.StatusBadRequest)
+		return
 	}
-	return dateTime, nil
-}
 
-// logAndWriteResult выполняет логирование результатов и запись их в ответ.
-func logAndWriteResult(w http.ResponseWriter, nowStr, dateStr, repeat string, nextDate time.Time) {
-	log.Println("[Info] FOR now =", nowStr, "date =", dateStr, "repeat =", repeat)
-	log.Println("[Info] nextDate =", nextDate.Format("20060102"))
+	repeat := r.URL.Query().Get("repeat")
 
-	w.Write([]byte(nextDate.Format("20060102")))
-}
+	ans, err := NextDate(now, date, repeat)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// handleError обрабатывает ошибку, логирует сообщение об ошибке и отправляет его в ответ.
-func handleError(w http.ResponseWriter, err error, errorMsg string) {
-	log.Println("[Error] " + errorMsg)
-	http.Error(w, err.Error(), http.StatusBadRequest)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte(ans))
+	if err != nil {
+		writeJSONError(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
