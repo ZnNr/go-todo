@@ -101,7 +101,7 @@ func TestAddTask(t *testing.T) {
 		}, http.MethodPost)
 		assert.NoError(t, err)
 
-		e, ok := m["errorutil"]
+		e, ok := m["error"]
 		assert.False(t, !ok || len(fmt.Sprint(e)) == 0,
 			"Ожидается ошибка для задачи %v", v)
 	}
@@ -122,7 +122,7 @@ func TestAddTask(t *testing.T) {
 			}, http.MethodPost)
 			assert.NoError(t, err)
 
-			e, ok := m["errorutil"]
+			e, ok := m["error"]
 			if ok && len(fmt.Sprint(e)) > 0 {
 				t.Errorf("Неожиданная ошибка %v для задачи %v", e, v)
 				continue

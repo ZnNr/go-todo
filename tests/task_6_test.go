@@ -32,7 +32,7 @@ func TestTask(t *testing.T) {
 	err = json.Unmarshal(body, &m)
 	assert.NoError(t, err)
 
-	e, ok := m["errorutil"]
+	e, ok := m["error"]
 	assert.False(t, !ok || len(fmt.Sprint(e)) == 0,
 		"Ожидается ошибка для вызова /api/task")
 
@@ -88,7 +88,7 @@ func TestEditTask(t *testing.T) {
 		assert.NoError(t, err)
 
 		var errVal string
-		e, ok := m["errorutil"]
+		e, ok := m["error"]
 		if ok {
 			errVal = fmt.Sprint(e)
 		}
@@ -99,7 +99,7 @@ func TestEditTask(t *testing.T) {
 		mupd, err := postJSON("api/task", newVals, http.MethodPut)
 		assert.NoError(t, err)
 
-		e, ok := mupd["errorutil"]
+		e, ok := mupd["error"]
 		assert.False(t, ok && fmt.Sprint(e) != "")
 
 		var task Task
