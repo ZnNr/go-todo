@@ -23,6 +23,30 @@ func taskFromRequestBody(r *http.Request) (Task, error) {
 	return task, err
 }
 
+func DonePostTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	id := r.URL.Query().Get("id")
+	err := TaskServiceInstance.DoneTask(id)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	w.Write([]byte("{}"))
+}
+
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	id := r.URL.Query().Get("id")
+	err := TaskServiceInstance.DeleteTask(id)
+	if err != nil {
+		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		return
+	}
+	w.Write([]byte("{}"))
+}
+
 // PostTask обрабатывает POST запрос для создания задачи
 func PostTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -110,7 +134,7 @@ func PutTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = TaskServiceInstance.Update(task)
+	err = TaskServiceInstance.UpdateTask(task)
 	if err != nil {
 		writeErrorAndRespond(w, http.StatusBadRequest, err)
 		return

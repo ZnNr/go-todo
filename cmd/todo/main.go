@@ -12,7 +12,8 @@ import (
 
 func main() {
 	// Инициализация базы данных и задач.
-	taskData, dbErr := task.NewTaskData(settings.Setting("TODO_DBFILE"))
+	dbFile := settings.Setting("TODO_DBFILE")
+	taskData, dbErr := task.NewTaskData(dbFile)
 	defer taskData.CloseDb()
 	if dbErr != nil {
 		log.Fatalf("Error initializing task data: %v", dbErr)
@@ -23,13 +24,17 @@ func main() {
 	// Установка маршрутов для обработки файлов и API.
 	r.Get("/*", FileServer)                      // Обработка запросов к файлам
 	r.Get("/api/nextdate", nextdate.GetNextDate) // API для получения следующей даты
-	r.Route("/api/task", func(r chi.Router) {
-		r.Post("/", task.PostTask)   // API для создания задачи
-		r.Get("/{id}", task.GetTask) // API для получения задачи по ID
-		r.Put("/", task.PutTask)
-	})
 
+	// Группировка маршрутов для работы с задачами
+	r.Route("/api/task", func(r chi.Router) {
+		r.Post("/", task.PostTask)         // Создание задачи
+		r.Put("/", task.PutTask)           // Обновление задачи
+		r.Delete("/", task.DeleteTask)     // Удаление задачи
+		r.Get("/", task.GetTask)           // Получение конкретной задачи
+		r.Post("/done", task.DonePostTask) // Отметка задачи как выполненной
+	})
 	r.Get("/api/tasks", task.GetTasks) // API для получения списка задач
+
 	// Старт веб-сервера на указанном порту.
 	port := settings.Setting("TODO_PORT")
 	serverAddr := ":" + port

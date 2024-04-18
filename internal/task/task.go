@@ -85,7 +85,7 @@ func (service TaskService) CreateTask(task Task) (int, error) {
 	return int(id), err
 }
 
-func (service TaskService) Update(task Task) error {
+func (service TaskService) UpdateTask(task Task) error {
 	err := convertTask(&task)
 	if err != nil {
 		return err
@@ -132,4 +132,56 @@ func (service TaskService) GetTask(id string) (*Task, error) {
 		return nil, err
 	}
 	return &task, nil
+}
+
+func (service TaskService) DeleteTask(id string) error {
+	convId, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+	deleted, err := service.taskData.Delete(convId)
+	if err != nil {
+		return err
+	}
+	if !deleted {
+		return ErrNotFoundTask
+	}
+	return nil
+}
+
+func (service TaskService) DoneTask(id string) error {
+	convId, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+
+	task, err := service.taskData.GetTask(convId)
+	if err != nil {
+		return err
+	}
+
+	if len(task.Repeat) == 0 {
+		deleted, err := service.taskData.Delete(convId)
+		if err != nil {
+			return err
+		}
+		if !deleted {
+			return ErrNotFoundTask
+		}
+		return nil
+	}
+
+	task.Date, err = nextdate.NextDate(time.Now(), task.Date, task.Repeat)
+	if err != nil {
+		return err
+	}
+
+	updated, err := service.taskData.UpdateTask(task)
+	if err != nil {
+		return err
+	}
+	if !updated {
+		return ErrNotFoundTask
+	}
+	return nil
 }

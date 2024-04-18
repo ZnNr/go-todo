@@ -30,8 +30,10 @@ INSERT INTO scheduler(date, title, comment, repeat) VALUES (?, ?, ?, ?)
 	getTasksByDateQuery = "SELECT * FROM scheduler WHERE date = ? ORDER BY date LIMIT ?"
 
 	getTasksBySearchStringQuery = "SELECT * FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?"
-	// Подготовленный запрос для обновления записи в базе данных.
+
 	updateQuery = "UPDATE scheduler SET date=?, title=?, comment=?, repeat=? WHERE id=?"
+
+	deleteQuery = "DELETE FROM scheduler WHERE id=:id"
 )
 
 // TaskData представляет структуру для работы с данными задач
@@ -162,6 +164,22 @@ func (data TaskData) UpdateTask(task Task) (bool, error) {
 
 	// Проверка, что была обновлена одна строка.
 	return rowsAffected == 1, nil
+}
+
+func (data TaskData) Delete(id int) (bool, error) {
+	// Получаем задачу по ID для проверки существования
+	_, err := data.GetTask(id)
+	if err != nil {
+		return false, err
+	}
+
+	res, err := data.db.Exec(deleteQuery, sql.Named("id", id))
+	if err != nil {
+		return false, err
+	}
+
+	deleted, err := res.RowsAffected()
+	return deleted == 1, err
 }
 
 // openDb открывает соединение с базой данных
