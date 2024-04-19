@@ -13,7 +13,7 @@ var TasksListRowsLimit = 50
 // defaultEnv содержит значения по умолчанию для некоторых настроек.
 var defaultEnv = map[string]string{
 	"TODO_PORT":     "7540",
-	"TODO_DBFILE":   "./scheduler.db",
+	"TODO_DBFILE":   "../scheduler.db",
 	"TODO_PASSWORD": "",
 	"SECRET_KEY":    "my_secret_key",
 }
