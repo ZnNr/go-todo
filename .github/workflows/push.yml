@@ -20,7 +20,7 @@ jobs:
           cd cmd && go build -o go-todo
 
       - name: Run App
-        run: ./go-todo &
+        run: cd cmd && ./go-todo &
 
       - name: Wait for App to start
         run: sleep 10
