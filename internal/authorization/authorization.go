@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var unauthorized = errors.New("authentication required")
+var unauthorized = errors.New("authentification required")
 
 type Password struct {
 	Password string `json:"password"`

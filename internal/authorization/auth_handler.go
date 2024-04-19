@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/ZnNr/go-todo/internal/errorutil"
 	"net/http"
@@ -8,29 +9,21 @@ import (
 
 var Service SignService
 
-// AuthService описывает интерфейс сервиса аутентификации.
-type AuthService interface {
-	Auth(token string) error
-	Signin(pass Password) (string, error)
-}
-
-// AuthMiddleware обеспечивает проверку аутентификации.
-type AuthMiddleware struct {
-	Service AuthService
-}
-
 // Auth проверяет аутентификацию и переходит к следующему обработчику в цепочке.
-func (auth *AuthMiddleware) Auth(next http.Handler) http.Handler {
+func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		cookie, err := r.Cookie("token")
-		if err != nil || cookie == nil {
+		if err != nil {
+			writeErrorAndRespond(w, http.StatusUnauthorized, err)
+			return
+		}
+		if cookie == nil {
 			writeErrorAndRespond(w, http.StatusUnauthorized, unauthorized)
 			return
 		}
-
-		err = auth.Service.Auth(cookie.Value)
+		err = Service.Auth(cookie.Value)
 		if err != nil {
 			writeErrorAndRespond(w, http.StatusUnauthorized, err)
 			return
@@ -45,11 +38,15 @@ func PostPass(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 	var pass Password
-	err := json.NewDecoder(r.Body).Decode(&pass)
+	buff := bytes.Buffer{}
+
+	_, err := buff.ReadFrom(r.Body)
 	if err != nil {
-		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		writeErrorAndRespond(w, http.StatusUnauthorized, err)
 		return
 	}
+
+	err = json.Unmarshal(buff.Bytes(), &pass)
 
 	token, err := Service.Signin(pass)
 	if err != nil {
@@ -57,11 +54,10 @@ func PostPass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ansBody, err := json.Marshal(map[string]string{"token": token})
-	if err != nil {
-		writeErrorAndRespond(w, http.StatusInternalServerError, err)
-		return
-	}
+	ansBody, err := json.Marshal(
+		struct {
+			Token string `json:"token"`
+		}{Token: token})
 
 	w.Write(ansBody)
 }

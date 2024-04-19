@@ -42,15 +42,11 @@ func main() {
 
 	// Группировка маршрутов для задач с общей авторизацией.
 	r.Group(func(r chi.Router) {
-		r.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				if len(pass) == 0 {
-					next.ServeHTTP(w, req)
-				} else {
-					authMiddleware := &authorization.AuthMiddleware{} // Создание экземпляра AuthMiddleware
-					authMiddleware.Auth(next).ServeHTTP(w, req)       // Использование AuthMiddleware
-				}
-			})
+		r.Use(func(handler http.Handler) http.Handler {
+			if len(pass) == 0 {
+				return handler
+			}
+			return authorization.Auth(handler)
 		})
 
 		r.Post("/api/task", task.PostTask)          // Создание задачи
