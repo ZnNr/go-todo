@@ -1,25 +1,36 @@
 name: Test Go application
 
 on: [push, pull_request]
-
 jobs:
-  test:
+  build:
+    name: Build and Test
     runs-on: ubuntu-latest
-    container: golang:1.22
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Vet Checkout code
-        run: |
-          go vet ./...
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
 
-      - name: Run Unit Tests
+      - name: Build
+        run: go build -o go-todo
+
+      - name: Run App
+        run: ./go-todo &
+
+      - name: Wait for App to start
+        run: sleep 10
+
+      - name: Test
         run: go test ./...
 
   deploy:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     if: startsWith(github.ref, 'refs/tags')
     steps:
       - name: Checkout
