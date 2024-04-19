@@ -1,6 +1,6 @@
-name: autotests
+name: Test Go application
 
-on: push
+on: [push, pull_request]
 
 jobs:
   test:
@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Vet
+      - name: Vet Checkout code
         run: |
           go vet ./...
 
