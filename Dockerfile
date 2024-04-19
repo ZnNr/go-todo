@@ -6,6 +6,12 @@ WORKDIR /app
 
 COPY . .
 
+RUN go mod download
+
+COPY *.db ./
+
+COPY cmd/todo/*.go ./
+
 ENV TODO_PORT="7540"
 ENV TODO_DBFILE="/scheduler.db"
 ENV TODO_PASSWORD="password"
