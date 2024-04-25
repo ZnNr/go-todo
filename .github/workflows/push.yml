@@ -15,13 +15,13 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Build
+      - name: Build Go application
+        run: |
 
-        run:  go build
+          go build go-todo/cmd/todo/main.go
+          ./go-todo & # Запуск приложения
+          echo "Go application successfully built and running"
 
-      - name: Run App
-
-        run:  ./go-todo &
 
       - name: Wait for App to start
         run: sleep 10
