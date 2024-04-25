@@ -1,0 +1,26 @@
+name: Test Go application
+
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.22'
+
+      - name: Build Go application
+        run: |
+          cd cmd/todo
+          go build
+          ./todo & # Запуск приложения
+          echo "Go application successfully built and running"
+
+      - name: Wait for App to start
+        run: sleep 10
