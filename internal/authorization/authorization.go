@@ -70,7 +70,7 @@ func (service SignService) Auth(token string) error {
 }
 
 // Signin обрабатывает пароль для создания JWT токена.
-func (service SignService) signIn(pass Password) (string, error) {
+func (service SignService) Signin(pass Password) (string, error) {
 	// Проверяем, совпадает ли хеш введенного пароля с начальным хешем пароля.
 	if service.initialPassHash == hash(pass.Password) {
 		// Если хеши совпадают, создаем JWT токен.
