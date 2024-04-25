@@ -16,10 +16,10 @@ jobs:
           go-version: '1.22'
 
       - name: Build
-        run: go build -o go-todo
+        run: go build -o ../go-todo
 
       - name: Run App
-        run:  ./go-todo &
+        run:  ../go-todo &
 
       - name: Wait for App to start
         run: sleep 10
