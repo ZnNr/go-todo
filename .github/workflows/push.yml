@@ -17,7 +17,7 @@ jobs:
 
       - name: Build Go application
         run: |
-          cd go-todo/cmd/todo
+          cd cmd/todo
           go build
           ./todo & # Запуск приложения
           echo "Go application successfully built and running"
