@@ -16,7 +16,7 @@ jobs:
           go-version: '1.22'
 
       - name: Build
-        run: cd cmd/todo && go build -o go-todo
+        run:  go build -o go-todo
 
       - name: Run App
         run:  ./go-todo &
