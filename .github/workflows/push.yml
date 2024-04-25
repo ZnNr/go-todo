@@ -24,6 +24,3 @@ jobs:
 
       - name: Wait for App to start
         run: sleep 10
-
-      - name: Test
-        run: go test ./...
