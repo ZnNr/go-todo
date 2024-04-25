@@ -17,11 +17,10 @@ jobs:
 
       - name: Build Go application
         run: |
-
-          go build go-todo/cmd/todo/main.go
-          ./go-todo & # Запуск приложения
+          cd go-todo/cmd/todo
+          go build
+          ./todo & # Запуск приложения
           echo "Go application successfully built and running"
-
 
       - name: Wait for App to start
         run: sleep 10
