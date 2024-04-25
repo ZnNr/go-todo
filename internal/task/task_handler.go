@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-var TaskServiceInstance TaskService
+var TaskServiceInstance Service
 
 // taskFromRequestBody извлекает задачу из тела запроса
 func taskFromRequestBody(r *http.Request) (Task, error) {
@@ -68,7 +68,7 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 		Id int `json:"id"`
 	}{Id: id})
 	if err != nil {
-		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		writeErrorAndRespond(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	// Преобразуем полученную задачу в формат JSON и отправляем клиенту
 	response, err := json.Marshal(task)
 	if err != nil {
-		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		writeErrorAndRespond(w, http.StatusInternalServerError, err)
 		return
 	}
 	w.Write(response)
@@ -104,7 +104,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	// Получаем значение параметра "search" из URL запроса
 	search := r.URL.Query().Get("search")
-	var tasks *TaskList
+	var tasks *List
 	var err error
 	// Если параметр "search" не указан, получаем все задачи, иначе ищем задачи по запросу
 	if len(search) == 0 {
@@ -113,13 +113,13 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 		tasks, err = TaskServiceInstance.SearchTasks(search)
 	}
 	if err != nil {
-		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		writeErrorAndRespond(w, http.StatusInternalServerError, err)
 		return
 	}
 	// Преобразуем список задач в формат JSON и отправляем клиенту
 	response, err := json.Marshal(tasks)
 	if err != nil {
-		writeErrorAndRespond(w, http.StatusBadRequest, err)
+		writeErrorAndRespond(w, http.StatusInternalServerError, err)
 		return
 	}
 

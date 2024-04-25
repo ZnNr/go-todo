@@ -22,22 +22,22 @@ type Task struct {
 	Repeat  string `json:"repeat"`
 }
 
-// TaskList Структура представляет собой список задач
-type TaskList struct {
+// List Структура представляет собой список задач
+type List struct {
 	Tasks []Task `json:"tasks"`
 }
 
-// TaskService представляет сервис для работы с задачами
-type TaskService struct {
+// Service представляет сервис для работы с задачами
+type Service struct {
 	taskData *TaskData
 }
 
-func sliceToTasks(list []Task) *TaskList {
+func sliceToTasks(list []Task) *List {
 	if list == nil {
-		return &TaskList{Tasks: []Task{}}
+		return &List{Tasks: []Task{}}
 
 	}
-	return &TaskList{Tasks: list}
+	return &List{Tasks: list}
 }
 
 // Функция convertTask конвертирует и проверяет задачу перед сохранением
@@ -70,13 +70,13 @@ func convertTask(task *Task) error {
 	return nil
 }
 
-// InitTaskService создает новый экземпляр TaskService
-func InitTaskService(taskData *TaskData) TaskService {
-	return TaskService{taskData: taskData}
+// InitTaskService создает новый экземпляр Service
+func InitTaskService(taskData *TaskData) Service {
+	return Service{taskData: taskData}
 }
 
 // CreateTask Метод создает новую задачу
-func (service TaskService) CreateTask(task Task) (int, error) {
+func (service Service) CreateTask(task Task) (int, error) {
 	err := convertTask(&task)
 	if err != nil {
 		return 0, err
@@ -85,7 +85,7 @@ func (service TaskService) CreateTask(task Task) (int, error) {
 	return int(id), err
 }
 
-func (service TaskService) UpdateTask(task Task) error {
+func (service Service) UpdateTask(task Task) error {
 	err := convertTask(&task)
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func (service TaskService) UpdateTask(task Task) error {
 	return nil
 }
 
-func (service TaskService) GetTasks() (*TaskList, error) {
+func (service Service) GetTasks() (*List, error) {
 	list, err := service.taskData.GetTasks(settings.TasksListRowsLimit)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (service TaskService) GetTasks() (*TaskList, error) {
 	return sliceToTasks(list), err
 }
 
-func (service TaskService) SearchTasks(search string) (*TaskList, error) {
+func (service Service) SearchTasks(search string) (*List, error) {
 	date, err := time.Parse(settings.SearchDateFormat, search)
 	if err == nil {
 		list, err := service.taskData.GetTasksByDate(date.Format(settings.DateFormat), settings.TasksListRowsLimit)
@@ -122,7 +122,7 @@ func (service TaskService) SearchTasks(search string) (*TaskList, error) {
 	return sliceToTasks(list), err
 }
 
-func (service TaskService) GetTask(id string) (*Task, error) {
+func (service Service) GetTask(id string) (*Task, error) {
 	convId, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (service TaskService) GetTask(id string) (*Task, error) {
 	return &task, nil
 }
 
-func (service TaskService) DeleteTask(id string) error {
+func (service Service) DeleteTask(id string) error {
 	convId, err := strconv.Atoi(id)
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func (service TaskService) DeleteTask(id string) error {
 	return nil
 }
 
-func (service TaskService) DoneTask(id string) error {
+func (service Service) DoneTask(id string) error {
 	convId, err := strconv.Atoi(id)
 	if err != nil {
 		return err
