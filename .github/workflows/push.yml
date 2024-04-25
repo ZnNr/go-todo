@@ -17,7 +17,7 @@ jobs:
 
       - name: Build
         working-directory: ./go-todo/..
-        run:  go build -o go-todo
+        run:  go build -o
 
       - name: Run App
         working-directory: ./go-todo/..
