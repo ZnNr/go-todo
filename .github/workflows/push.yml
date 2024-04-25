@@ -16,11 +16,11 @@ jobs:
           go-version: '1.22'
 
       - name: Build
-        working-directory: .
-        run:  go build -o go-todo
+
+        run:  go build
 
       - name: Run App
-        working-directory: .
+
         run:  ./go-todo &
 
       - name: Wait for App to start
